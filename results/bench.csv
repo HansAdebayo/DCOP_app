@@ -1,0 +1,17 @@
+xml_file,algorithm,total_cost,runtime_ms,ncccs,msgs_total,instance_name,nb_agents,nb_variables,nb_constraints,nb_relations,max_arity,domain_names,domain_sizes,arity_histogram,nb_soft_relations,nb_other_relations,passengers_guess
+instance2V_2P_aleatoire.xml,DPOP,262.0,10,24,14,instance2V_2P_aleatoire,2,4,8,8,3,bin,2,1:4;2:4,8,0,2
+instance2V_2P_aleatoire.xml,ADOPT,262.0,7,34,29,instance2V_2P_aleatoire,2,4,8,8,3,bin,2,1:4;2:4,8,0,2
+instance2V_2P_aleatoire.xml,MGM,262.0,10,3,2781,instance2V_2P_aleatoire,2,4,8,8,3,bin,2,1:4;2:4,8,0,2
+instance2V_2P_aleatoire.xml,MaxSum,,13,1,291,instance2V_2P_aleatoire,2,4,8,8,3,bin,2,1:4;2:4,8,0,2
+instance2V_3P_aleatoire.xml,DPOP,186.0,9,96,15,instance2V_3P_aleatoire,2,6,14,14,3,bin,2,1:6;2:6;3:2,14,0,3
+instance2V_3P_aleatoire.xml,ADOPT,186.0,15,1,464,instance2V_3P_aleatoire,2,6,14,14,3,bin,2,1:6;2:6;3:2,14,0,3
+instance2V_3P_aleatoire.xml,MGM,217.0,14,6,3848,instance2V_3P_aleatoire,2,6,14,14,3,bin,2,1:6;2:6;3:2,14,0,3
+instance2V_3P_aleatoire.xml,MaxSum,186.0,22,6,793,instance2V_3P_aleatoire,2,6,14,14,3,bin,2,1:6;2:6;3:2,14,0,3
+instance2V_4P_aleatoire.xml,DPOP,426.0,13,492,14,instance2V_4P_aleatoire,2,8,24,24,3,bin,2,1:8;2:8;3:8,24,0,4
+instance2V_4P_aleatoire.xml,ADOPT,426.0,52,72,2754,instance2V_4P_aleatoire,2,8,24,24,3,bin,2,1:8;2:8;3:8,24,0,4
+instance2V_4P_aleatoire.xml,MGM,467.0,16,12,5137,instance2V_4P_aleatoire,2,8,24,24,3,bin,2,1:8;2:8;3:8,24,0,4
+instance2V_4P_aleatoire.xml,MaxSum,426.0,29,12,1076,instance2V_4P_aleatoire,2,8,24,24,3,bin,2,1:8;2:8;3:8,24,0,4
+instance3V_4P_aleatoire.xml,DPOP,326.0,12,3,47,instance3V_4P_aleatoire,3,12,40,40,3,bin,2,1:12;2:12;3:16,40,0,4
+instance3V_4P_aleatoire.xml,ADOPT,326.0,437,1,394309,instance3V_4P_aleatoire,3,12,40,40,3,bin,2,1:12;2:12;3:16,40,0,4
+instance3V_4P_aleatoire.xml,MGM,381.0,17,16,14694,instance3V_4P_aleatoire,3,12,40,40,3,bin,2,1:12;2:12;3:16,40,0,4
+instance3V_4P_aleatoire.xml,MaxSum,,37,21,3096,instance3V_4P_aleatoire,3,12,40,40,3,bin,2,1:12;2:12;3:16,40,0,4
