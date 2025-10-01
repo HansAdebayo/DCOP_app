@@ -1,4 +1,4 @@
-# application_streamlit.py (Version très simplifiée pour génération aléatoire + analyse CSV)
+# application_streamlit.py (Version avec choix de Modélisation 1 ou 2)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -48,16 +48,19 @@ def dessiner_scene(voitures, passagers, dest_commune=None, dest_par=None):
     ax.set_xlabel("X"); ax.set_ylabel("Y"); ax.legend()
     st.pyplot(fig)
 
-def boutons_telechargement_json(obj_json, suffixe_cle):
+def boutons_telechargement_json(obj_json, suffixe_cle, modelisation_choisie):
     """Affiche les boutons de téléchargement pour le JSON et le XML."""
     json_str = afficher_json_joli(obj_json)
+    nom_base = obj_json.get('nom','instance')
     st.download_button("⬇️ Télécharger JSON", data=json_str.encode("utf-8"),
-                       file_name=f"{obj_json.get('nom','instance')}.json",
+                       file_name=f"{nom_base}.json",
                        mime="application/json", key=f"json_{suffixe_cle}")
-    xml_str = json_vers_xml(obj_json)
-    st.download_button("⬇️ Télécharger XML (XCSP FRODO)", data=xml_str.encode("utf-8"),
-                       file_name=f"{obj_json.get('nom','instance')}.xml",
-                       mime="application/xml", key=f"xml_{suffixe_cle}")
+    
+    xml_str = json_vers_xml(obj_json, modelisation=modelisation_choisie)
+    st.download_button(f"⬇️ Télécharger XML (Modèle {modelisation_choisie})", 
+                       data=xml_str.encode("utf-8"),
+                       file_name=f"{nom_base}_M{modelisation_choisie}.xml",
+                       mime="application/xml", key=f"xml_{suffixe_cle}_M{modelisation_choisie}")
 
 # --- BARRE LATÉRALE (NAVIGATION SIMPLIFIÉE) ---
 st.sidebar.title("⚙️ Mode")
@@ -87,13 +90,17 @@ if mode == "Générer une Instance Aléatoire":
             largeur = st.number_input("Largeur (plan 2D)", 1.0, 10000.0, 100.0)
             hauteur = st.number_input("Hauteur (plan 2D)", 1.0, 10000.0, 100.0)
             
-    with st.expander("Paramètres de Destination (Dépose)", expanded=True):
-        colA, colB, colC = st.columns(3)
+    with st.expander("Modélisation DCOP et Coûts", expanded=True):
+        colA, colB, colC, colD = st.columns(4)
         with colA:
-            type_depot = st.selectbox("Type de destination (Dépose)", ["Unique (commune)", "Par passager"])
+            modelisation = st.selectbox("Modélisation DCOP", 
+                                        options=[1, 2], 
+                                        format_func=lambda x: f"M{x}: Var par {'Voit-Pass' if x==1 else 'Passager'}")
         with colB:
-            poids_ramassage = st.number_input("Poids ramassage (Coût de départ)", 0.0, 100.0, 1.0)
+            type_depot = st.selectbox("Type de destination (Dépose)", ["Unique (commune)", "Par passager"])
         with colC:
+            poids_ramassage = st.number_input("Poids ramassage (Coût de départ)", 0.0, 100.0, 1.0)
+        with colD:
             poids_depot = st.number_input("Poids dépose (Coût d'arrivée)", 0.0, 100.0, 1.0)
 
     # Variables pour la destination commune
@@ -135,7 +142,7 @@ if mode == "Générer une Instance Aléatoire":
             poids_ramassage=poids_ramassage, poids_depot=poids_depot
         )
 
-        st.success(f"Instance '{nom_instance}' générée avec succès.")
+        st.success(f"Instance '{nom_instance}' générée avec succès (Modèle M{modelisation}).")
 
         col_viz, col_data = st.columns(2)
         with col_viz:
@@ -144,7 +151,8 @@ if mode == "Générer une Instance Aléatoire":
         
         with col_data:
             st.subheader("Téléchargements")
-            boutons_telechargement_json(obj_json, suffixe_cle="rnd")
+            # Appel mis à jour
+            boutons_telechargement_json(obj_json, suffixe_cle="rnd", modelisation_choisie=modelisation)
             
             st.subheader("Matrice des coûts (voitures en lignes)")
             df = pd.DataFrame(obj_json["couts"]).T

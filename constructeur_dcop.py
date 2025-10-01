@@ -4,9 +4,16 @@ from xml.sax.saxutils import escape
 import math, json, random
 from typing import Dict, List, Tuple
 
+# Constante pour l'infini (utilisée dans la modélisation 1)
+INFINITY_COST = "infinity" 
+
 def euclid(a: Tuple[float,float], b: Tuple[float,float]) -> float:
     """Calcule la distance euclidienne entre deux points (tuples de flottants)."""
     return math.hypot(a[0]-b[0], a[1]-b[1])
+
+# ======================================================================
+# MODÉLISATION 1 : Variable par Voiture-Passager (x_ij = 1 si voiture i prend passager j)
+# ======================================================================
 
 def construire_instance_xcsp(
     voitures: List[str],
@@ -17,13 +24,8 @@ def construire_instance_xcsp(
     format_str: str = "XCSP 2.1_FRODO",
 ) -> str:
     """
-    Construit une instance de Problème d'Optimisation à Contraintes Distribuées (DCOP)
-    au format XML XCSP 2.1 (FRODO) pour le problème de ramassage.
-    
-    Les contraintes incluent :
-    - Coûts unitaires doux (minimisation).
-    - Chaque passager est pris par EXACTEMENT une voiture.
-    - Contrainte de capacité pour chaque voiture.
+    Construit une instance DCOP (Modélisation 1) : 
+    Variables x_ij = {0, 1}. Agent = Voiture i.
     """
     # 1. Validations initiales
     for v in voitures:
@@ -34,13 +36,15 @@ def construire_instance_xcsp(
             if (v, p) not in couts:
                 raise ValueError(f"Coût manquant pour ({v},{p})")
 
-    nb_agents = len(voitures)
-    nb_variables = len(voitures) * len(passagers)
+    nb_voitures = len(voitures)
+    nb_passagers = len(passagers)
+    nb_agents = nb_voitures
+    nb_variables = nb_voitures * nb_passagers
 
     xml = []
     xml.append('<instance>')
     xml.append(
-        f'  <presentation nom="{escape(nom)}" maxConstraintArity="{max(len(voitures), max(capacite_par_voiture.values())+1)}" format="{escape(format_str)}" maximiser="false"/>'
+        f'  <presentation nom="{escape(nom)}" maxConstraintArity="{max(nb_voitures, max(capacite_par_voiture.values())+1)}" format="{escape(format_str)}" maximiser="false"/>'
     )
 
     # 2. Agents
@@ -88,29 +92,29 @@ def construire_instance_xcsp(
             nom_rel = f"AMO_{p}_{i1}_{i2}"
             relations.append(
                 # Coût infini si les deux sont à 1
-                f'    <relation nom="{nom_rel}" arite="2" semantique="soft" coutParDefaut="0" nbTuples="1">infinity: 1 1</relation>'
+                f'    <relation nom="{nom_rel}" arite="2" semantique="soft" coutParDefaut="0" nbTuples="1">{INFINITY_COST}: 1 1</relation>'
             )
             contraintes.append(
                 f'    <contrainte nom="amo_{p}_{i1}_{i2}" arite="2" portee="{v1} {v2}" reference="{nom_rel}"/>'
             )
         # B. Interdiction du Tout-Zéro (Au Moins Une)
-        toutes_vars = " ".join(f"x{i}{j}" for i in range(1, len(voitures)+1))
+        toutes_vars = " ".join(f"x{i}{j}" for i in range(1, nb_voitures+1))
         zeros = " ".join("0" for _ in voitures)
         nom_rel = f"PAS_DE_TOUT_ZERO_{p}"
         relations.append(
             # Coût infini si toutes les variables sont à 0
-            f'    <relation nom="{nom_rel}" arite="{len(voitures)}" semantique="soft" coutParDefaut="0" nbTuples="1">infinity: {zeros}</relation>'
+            f'    <relation nom="{nom_rel}" arite="{nb_voitures}" semantique="soft" coutParDefaut="0" nbTuples="1">{INFINITY_COST}: {zeros}</relation>'
         )
         contraintes.append(
-            f'    <contrainte nom="pas_de_tout_zero_{p}" arite="{len(voitures)}" portee="{toutes_vars}" reference="{nom_rel}"/>'
+            f'    <contrainte nom="pas_de_tout_zero_{p}" arite="{nb_voitures}" portee="{toutes_vars}" reference="{nom_rel}"/>'
         )
 
     # 7. Contraintes de Capacité par Voiture (Interdiction Tout-Un sur K+1)
     for i, v in enumerate(voitures, start=1):
         K = int(capacite_par_voiture[v])
-        if K >= len(passagers):
+        if K >= nb_passagers:
             continue
-        indices_passagers = range(1, len(passagers)+1)
+        indices_passagers = range(1, nb_passagers+1)
         for idx, sous_ensemble in enumerate(combinations(indices_passagers, K + 1), start=1):
             vars_portee = [f"x{i}{j}" for j in sous_ensemble]
             portee_str = " ".join(vars_portee)
@@ -118,7 +122,7 @@ def construire_instance_xcsp(
             nom_rel = f"CAP_AU_PLUS_{v}_{idx}"
             relations.append(
                 # Coût infini si toutes les variables dans le sous-ensemble sont à 1
-                f'    <relation nom="{nom_rel}" arite="{K+1}" semantique="soft" coutParDefaut="0" nbTuples="1">infinity: {uns}</relation>'
+                f'    <relation nom="{nom_rel}" arite="{K+1}" semantique="soft" coutParDefaut="0" nbTuples="1">{INFINITY_COST}: {uns}</relation>'
             )
             contraintes.append(
                 f'    <contrainte nom="cap_{v}_{idx}" arite="{K+1}" portee="{portee_str}" reference="{nom_rel}"/>'
@@ -135,8 +139,135 @@ def construire_instance_xcsp(
     xml.append('</instance>')
     return "\n".join(xml)
 
+# ======================================================================
+# MODÉLISATION 2 : Variable par Passager (y_j = {v1, v2, ...})
+# ======================================================================
+
+def construire_instance_xcsp_alt(
+    voitures: List[str],
+    passagers: List[str],
+    capacite_par_voiture: Dict[str, int],
+    couts: Dict[Tuple[str, str], int],
+    nom: str = "ramassage_alt_auto",
+    format_str: str = "XCSP 2.1_FRODO",
+) -> str:
+    """
+    Construit une instance DCOP (Modélisation 2) : 
+    Variables y_j = {1, 2, ..., N_voitures}. Agent = Voiture "responsable" (pour DPOP/MaxSum/etc.).
+    
+    NOTE : Cette modélisation gère naturellement l'unicité par passager (chaque y_j a une seule valeur)
+           et la couverture totale (pas de valeur 0), mais nécessite des contraintes N-aires 
+           pour la capacité des voitures et le coût. Les agents sont attribués aux passagers 
+           (par ex. : agent v1 pour y1, agent v2 pour y2, v1 pour y3, etc.) pour la distribution DCOP.
+    """
+    nb_voitures = len(voitures)
+    nb_passagers = len(passagers)
+    nb_agents = nb_voitures
+    
+    # 1. Déterminer l'Agent de chaque variable (Passager) pour DCOP
+    # On assigne cycliquement l'agent à la variable/passager.
+    agent_par_passager = {
+        passagers[j]: voitures[j % nb_voitures] for j in range(nb_passagers)
+    }
+    
+    xml = []
+    xml.append('<instance>')
+    # L'arité maximale est celle de la contrainte de capacité (N_passagers ou N_voitures+1)
+    max_arity = max(nb_passagers, nb_voitures + 1) if nb_voitures > 0 else nb_passagers 
+    xml.append(
+        f'  <presentation nom="{escape(nom)}" maxConstraintArity="{max_arity}" format="{escape(format_str)}" maximiser="false"/>'
+    )
+
+    # 2. Agents
+    xml.append(f'  <agents nbAgents="{nb_agents}">')
+    for v in voitures:
+        xml.append(f'    <agent nom="{escape(v)}"/>')
+    xml.append('  </agents>')
+
+    # 3. Domaines
+    xml.append('  <domaines nbDomaines="1">')
+    valeurs_domaine = " ".join(str(i+1) for i in range(nb_voitures)) # 1, 2, ..., N_voitures
+    xml.append(f'    <domaine nom="cars" nbValeurs="{nb_voitures}">{valeurs_domaine}</domaine>')
+    xml.append('  </domaines>')
+
+    # 4. Variables
+    xml.append(f'  <variables nbVariables="{nb_passagers}">')
+    nom_var_par_passager = {}
+    for j, p in enumerate(passagers, start=1):
+        nom_var = f"y{j}"
+        nom_var_par_passager[p] = nom_var
+        agent_p = agent_par_passager[p]
+        # y_j = k si le passager j est pris par la voiture k (indice 1)
+        xml.append(f'    <variable nom="{nom_var}" domaine="cars" agent="{escape(agent_p)}"/>')
+    xml.append('  </variables>')
+
+    relations, contraintes = [], []
+
+    # Mapping de l'ID voiture à son indice (valeur de la variable y_j)
+    id_voiture_vers_valeur = {v: i+1 for i, v in enumerate(voitures)}
+    valeur_vers_id_voiture = {v: i for i, v in id_voiture_vers_valeur.items()}
+
+    # 5. Contraintes de Coûts Unitaires (Soft)
+    for p in passagers:
+        nom_var = nom_var_par_passager[p]
+        nom_rel = f"Cost_{nom_var}"
+        
+        tuples_cout = []
+        for v_id, v in enumerate(voitures):
+            valeur_v = id_voiture_vers_valeur[v] # 1, 2, ...
+            cout_v = int(couts[(v, p)])
+            tuples_cout.append(f"{cout_v}: {valeur_v}")
+            
+        relations.append(
+            f'    <relation nom="{nom_rel}" arite="1" semantique="soft" coutParDefaut="0" nbTuples="{nb_voitures}">\n'
+            + " | ".join(tuples_cout)
+            + '\n    </relation>'
+        )
+        contraintes.append(
+            f'    <contrainte nom="c_{nom_var}" arite="1" portee="{nom_var}" reference="{nom_rel}"/>'
+        )
+        
+    # 6. Contraintes de Capacité par Voiture (Arêtes Binaires (Pair-wise) pour chaque paire de variables)
+    for v_idx, v in enumerate(voitures):
+        K = int(capacite_par_voiture[v])
+        valeur_v = id_voiture_vers_valeur[v] # Valeur (1, 2, ...) qui représente cette voiture
+        
+        # Trouver toutes les variables (passagers) qui pourraient être prises par cette voiture
+        vars_passagers = [nom_var_par_passager[p] for p in passagers]
+        
+        # Si la capacité K est inférieure au nombre de passagers, on doit imposer la contrainte.
+        if K < nb_passagers:
+            
+            # On utilise une approche avec une contrainte N-aire d'interdiction (plus simple et plus général)
+            # Sous-ensembles de K+1 variables/passagers. Si tous prennent la valeur 'valeur_v', c'est infini.
+            
+            for idx, sous_ensemble in enumerate(combinations(vars_passagers, K + 1), start=1):
+                portee_str = " ".join(sous_ensemble)
+                valeurs_interdites = " ".join(str(valeur_v) for _ in sous_ensemble)
+                
+                nom_rel = f"CAP_V{valeur_v}_SUBSET{idx}"
+                relations.append(
+                    # Coût infini si toutes les variables dans le sous-ensemble sont égales à valeur_v
+                    f'    <relation nom="{nom_rel}" arite="{K+1}" semantique="soft" coutParDefaut="0" nbTuples="1">{INFINITY_COST}: {valeurs_interdites}</relation>'
+                )
+                contraintes.append(
+                    f'    <contrainte nom="cap_{v}_{idx}" arite="{K+1}" portee="{portee_str}" reference="{nom_rel}"/>'
+                )
+
+
+    # 7. Assemblage final
+    xml.append(f'  <relations nbRelations="{len(relations)}">')
+    xml.extend(relations)
+    xml.append('  </relations>')
+
+    xml.append(f'  <contraintes nbContraintes="{len(contraintes)}">')
+    xml.extend(contraintes)
+    xml.append('  </contraintes>')
+    xml.append('</instance>')
+    return "\n".join(xml)
+
 # ----------------------------------------------------------------------
-# Fonctions de Génération et Conversion JSON
+# Fonctions de Génération et Conversion JSON (inchangées)
 # ----------------------------------------------------------------------
 
 def generer_positions_aleatoires(n: int, largeur: float, hauteur: float, graine: int):
@@ -208,8 +339,10 @@ def construire_json_a_partir_positions(
         obj_json["poids_depot"] = poids_depot
     return obj_json
 
-def json_vers_xml(obj_json: dict) -> str:
-    """Convertit un objet JSON d'instance en chaîne XML XCSP."""
+def json_vers_xml(obj_json: dict, modelisation: int = 1) -> str:
+    """
+    Convertit un objet JSON d'instance en chaîne XML XCSP en utilisant la modélisation choisie.
+    """
     voitures = [v["id"] for v in obj_json["voitures"]]
     passagers = list(obj_json["passagers"])
     
@@ -221,9 +354,17 @@ def json_vers_xml(obj_json: dict) -> str:
              for id_v in obj_json["couts"] 
              for id_p in obj_json["couts"][id_v]}
              
-    return construire_instance_xcsp(
-        voitures, passagers, capacite_par_voiture, couts, nom=obj_json.get("nom", "ramassage_auto")
-    )
+    if modelisation == 1:
+        return construire_instance_xcsp(
+            voitures, passagers, capacite_par_voiture, couts, nom=obj_json.get("nom", "ramassage_auto_M1")
+        )
+    elif modelisation == 2:
+        return construire_instance_xcsp_alt(
+            voitures, passagers, capacite_par_voiture, couts, nom=obj_json.get("nom", "ramassage_auto_M2")
+        )
+    else:
+        raise ValueError("Modélisation non supportée. Choisissez 1 ou 2.")
+
 
 def afficher_json_joli(obj: dict) -> str:
     """Affiche un objet JSON avec une indentation propre."""
