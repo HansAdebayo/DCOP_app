@@ -1,0 +1,5 @@
+algorithm,mean_runtime_ms,median_runtime_ms,mean_msgs_total,median_msgs_total,mean_ncccs,median_ncccs
+ADOPT,127.75,33.5,99389.0,1609.0,27.0,17.5
+DPOP,11.0,11.0,22.5,14.5,153.75,60.0
+MGM,14.25,15.0,6615.0,4492.5,9.25,9.0
+MaxSum,25.25,25.5,1314.0,934.5,10.0,9.0

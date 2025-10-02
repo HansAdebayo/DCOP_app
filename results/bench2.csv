@@ -1,0 +1,17 @@
+xml_file,algorithm,total_cost,runtime_ms,ncccs,msgs_total,instance_name,nb_agents,nb_variables,nb_constraints,nb_relations,max_arity,domain_names,domain_sizes,arity_histogram,nb_soft_relations,nb_other_relations,passengers_guess
+instance2V_2P_aleatoire_M2.xml,DPOP,170.0,6,2,0,instance2V_2P_aleatoire,2,2,2,2,2,cars,2,1:2,2,0,1
+instance2V_2P_aleatoire_M2.xml,ADOPT,170.0,4,2,0,instance2V_2P_aleatoire,2,2,2,2,2,cars,2,1:2,2,0,1
+instance2V_2P_aleatoire_M2.xml,MGM,185.0,3,,0,instance2V_2P_aleatoire,2,2,2,2,2,cars,2,1:2,2,0,1
+instance2V_2P_aleatoire_M2.xml,MaxSum,170.0,1,3,0,instance2V_2P_aleatoire,2,2,2,2,2,cars,2,1:2,2,0,1
+instance2V_3P_aleatoire_M2.xml,DPOP,240.0,8,29,10,instance2V_3P_aleatoire,2,3,5,5,3,cars,2,1:3;3:2,5,0,
+instance2V_3P_aleatoire_M2.xml,ADOPT,240.0,8,102,66,instance2V_3P_aleatoire,2,3,5,5,3,cars,2,1:3;3:2,5,0,
+instance2V_3P_aleatoire_M2.xml,MGM,240.0,11,3,2401,instance2V_3P_aleatoire,2,3,5,5,3,cars,2,1:3;3:2,5,0,
+instance2V_3P_aleatoire_M2.xml,MaxSum,240.0,5,314,23,instance2V_3P_aleatoire,2,3,5,5,3,cars,2,1:3;3:2,5,0,
+instance2V_4P_aleatoire_M2.xml,DPOP,245.0,14,119,22,instance2V_4P_aleatoire,2,4,12,12,3,cars,2,1:4;3:8,12,0,2
+instance2V_4P_aleatoire_M2.xml,ADOPT,245.0,12,1,569,instance2V_4P_aleatoire,2,4,12,12,3,cars,2,1:4;3:8,12,0,2
+instance2V_4P_aleatoire_M2.xml,MGM,275.0,12,8,4854,instance2V_4P_aleatoire,2,4,12,12,3,cars,2,1:4;3:8,12,0,2
+instance2V_4P_aleatoire_M2.xml,MaxSum,245.0,19,5,962,instance2V_4P_aleatoire,2,4,12,12,3,cars,2,1:4;3:8,12,0,2
+instance3V_4P_aleatoire_M2.xml,DPOP,235.0,10,840,29,instance3V_4P_aleatoire,3,4,16,16,3,cars,3,1:4;3:12,16,0,
+instance3V_4P_aleatoire_M2.xml,ADOPT,235.0,12,12,2023,instance3V_4P_aleatoire,3,4,16,16,3,cars,3,1:4;3:12,16,0,
+instance3V_4P_aleatoire_M2.xml,MGM,235.0,12,21,6004,instance3V_4P_aleatoire,3,4,16,16,3,cars,3,1:4;3:12,16,0,
+instance3V_4P_aleatoire_M2.xml,MaxSum,235.0,15,7,744,instance3V_4P_aleatoire,3,4,16,16,3,cars,3,1:4;3:12,16,0,
